@@ -114,7 +114,8 @@ private:
 			double fy = camera_matrix.at<double>(1, 1);
 			geometry_msgs::Vector3Stamped direction;
 			direction.vector.x = cnt_undistort[0].x;
-			direction.vector.y = cnt_undistort[0].y * fx / fy;
+			// Reverse Y direction due to screen coordinates being upside down
+			direction.vector.y =  - cnt_undistort[0].y * fx / fy;
 			direction.vector.z = fx;
 			// Normalize vector
 			direction.vector = normalize(direction.vector);
