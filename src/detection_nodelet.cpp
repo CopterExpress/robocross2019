@@ -113,16 +113,18 @@ private:
 			double fx = camera_matrix.at<double>(0, 0);
 			double fy = camera_matrix.at<double>(1, 1);
 			geometry_msgs::Vector3Stamped direction;
-			direction.vector.x = cnt_undistort[0].x;
+			direction.vector.x = cnt.x - src->width / 2; //cnt_undistort[0].x;
 			// Reverse Y direction due to screen coordinates being upside down
-			direction.vector.y =  - cnt_undistort[0].y * fx / fy;
-			direction.vector.z = fx;
+			direction.vector.y = cnt.y - src->height / 2 + 50 /* HACK! Remove later*/; //cnt_undistort[0].y * fx / fy;
+			direction.vector.z = src->width / 2;
 			// Normalize vector
 			direction.vector = normalize(direction.vector);
 			direction.header.stamp = src->header.stamp;
 			direction.header.frame_id = src->header.frame_id;
 			//ROS_INFO_THROTTLE(1, "Publishing vector: (%lf, %lf, %lf)", direction.vector.x, direction.vector.y, direction.vector.z);
 			direction_pub.publish(direction);
+			cnt_undistort[0].x += src->width / 2;
+			cnt_undistort[0].y += src->height / 2;
 
 			if (debug_center.getNumSubscribers() > 0)
 			{
@@ -132,6 +134,7 @@ private:
 				debug_msg.encoding = sensor_msgs::image_encodings::BGR8;
 				cv::Mat debug_image = src_image->image;
 				cv::circle(debug_image, cnt, approx_radius, cv::Scalar(0, 255, 0), 3);
+				cv::circle(debug_image, cnt_undistort[0], approx_radius, cv::Scalar(255, 0, 0), 3);
 				debug_msg.image = debug_image;
 				debug_center.publish(debug_msg.toImageMsg());
 			}
