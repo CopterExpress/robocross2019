@@ -1,4 +1,4 @@
-#include <red_dead_detection/DetectionConfig.h>
+#include <robocross2019/DetectionConfig.h>
 #include <ros/ros.h>
 #include <nodelet/nodelet.h>
 #include <pluginlib/class_list_macros.h>
@@ -38,7 +38,7 @@ private:
 		src_sub = it.subscribeCamera("image_raw", 1, &RedDeadDetectionNodelet::imageCallback, this);
 		debug_threshold = it_priv.advertise("threshold", 1);
 		debug_center = it_priv.advertise("debug", 1);
-		direction_pub = nh_priv.advertise("direction", 1, false);
+		direction_pub = nh_priv.advertise<geometry_msgs::Vector3Stamped>("direction", 1, false);
 
 		dyn_srv = boost::make_shared<dynamic_reconfigure::Server<red_dead_detection::DetectionConfig>>(nh_priv);
 		dynamic_reconfigure::Server<red_dead_detection::DetectionConfig>::CallbackType cb;

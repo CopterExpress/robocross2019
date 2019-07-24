@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(red_dead_detection)
+project(robocross2019)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -137,8 +137,7 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(${PROJECT_NAME}_node src/detection_node.cpp)
-add_library(${PROJECT_NAME}_nodelet src/detection_nodelet.cpp)
+add_library(red_dead_detection_nodelet src/detection_nodelet.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -148,33 +147,23 @@ add_library(${PROJECT_NAME}_nodelet src/detection_nodelet.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(${PROJECT_NAME}_nodelet ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(red_dead_detection_nodelet ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(${PROJECT_NAME}_node PUBLIC
+target_link_libraries(red_dead_detection_nodelet PUBLIC
   ${catkin_LIBRARIES}
   ${OpenCV_LIBRARIES}
 )
 
-target_link_libraries(${PROJECT_NAME}_nodelet PUBLIC
-  ${catkin_LIBRARIES}
-  ${OpenCV_LIBRARIES}
-)
-
-target_include_directories(${PROJECT_NAME}_node PUBLIC
+target_include_directories(red_dead_detection_nodelet PUBLIC
   ${OpenCV_INCLUDE_DIRS}
   )
 
-target_include_directories(${PROJECT_NAME}_nodelet PUBLIC
-  ${OpenCV_INCLUDE_DIRS}
-  )
-
-target_compile_features(${PROJECT_NAME}_nodelet PUBLIC
+target_compile_features(red_dead_detection_nodelet PUBLIC
   cxx_auto_type
 )
 
-add_dependencies(${PROJECT_NAME}_nodelet ${PROJECT_NAME}_gencfg)
+add_dependencies(red_dead_detection_nodelet ${PROJECT_NAME}_gencfg)
 
 #############
 ## Install ##
