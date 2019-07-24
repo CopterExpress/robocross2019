@@ -1,0 +1,5 @@
+<library path="lib/libred_dead_detection_nodelet">
+    <class name="red_dead_detection/red_dead_detection_nodelet" type="RedDeadDetectionNodelet" base_class_type="nodelet::Nodelet">
+        <description/>
+    </class>
+</library>
