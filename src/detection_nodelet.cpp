@@ -95,6 +95,11 @@ private:
 		cv::Scalar upper = cv::Scalar(detect_cfg.h_high, detect_cfg.s_high, detect_cfg.v_high);
 		cv::inRange(src_image_hsv, lower, upper, img_threshold);
 
+		const cv::Size KERNEL_SIZE = {detect_cfg.kernel_size_x, detect_cfg.kernel_size_y};
+		auto kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, KERNEL_SIZE);
+		cv::erode(img_threshold, img_threshold, kernel);
+		cv::dilate(img_threshold, img_threshold, kernel);
+
 		auto moments = cv::moments(img_threshold, true);
 		if (moments.m00 > 0)
 		{
@@ -105,7 +110,7 @@ private:
 			// Calculate direction vector
 			std::vector<cv::Point2d> cnt_distort = { cnt };
 			std::vector<cv::Point2d> cnt_undistort(1);
-			cv::undistortPoints(cnt_distort, cnt_undistort, camera_matrix, distortion);
+			cv::undistortPoints(cnt_distort, cnt_undistort, camera_matrix, distortion, cv::noArray(), camera_matrix);
 			// Shift points to center
 			cnt_undistort[0].x -= src->width / 2;
 			cnt_undistort[0].y -= src->height / 2;
