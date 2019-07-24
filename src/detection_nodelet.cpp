@@ -67,10 +67,21 @@ private:
 		}
 	}
 
+	static geometry_msgs::Vector3 normalize(const geometry_msgs::Vector3 v)
+	{
+		double norm = std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+		geometry_msgs::Vector3 result;
+		result.x = v.x / norm;
+		result.y = v.y / norm;
+		result.z = v.z / norm;
+		return result;
+	}
+
 	void imageCallback(const sensor_msgs::ImageConstPtr& src, const sensor_msgs::CameraInfoConstPtr& cameraInfo)
 	{
 		bool has_subscribers = (debug_threshold.getNumSubscribers() > 0) ||
-				(debug_center.getNumSubscribers() > 0);
+				(debug_center.getNumSubscribers() > 0) ||
+				(direction_pub.getNumSubscribers() > 0);
 		if (!has_subscribers) return;
 
 		storeCameraInfo(cameraInfo);
@@ -85,10 +96,45 @@ private:
 		cv::inRange(src_image_hsv, lower, upper, img_threshold);
 
 		auto moments = cv::moments(img_threshold, true);
-		int cnt_x = moments.m10 / moments.m00;
-		int cnt_y = moments.m01 / moments.m00;
-		// m00 is the area of the pixels; radius would then be sqrt(area/pi)
-		int approx_radius = std::sqrt(moments.m00 * M_1_PI);
+		if (moments.m00 > 0)
+		{
+			cv::Point2d cnt{moments.m10 / moments.m00, moments.m01 / moments.m00};
+			// m00 is the area of the pixels; radius would then be sqrt(area/pi)
+			int approx_radius = std::sqrt(moments.m00 * M_1_PI);
+
+			// Calculate direction vector
+			std::vector<cv::Point2d> cnt_distort = { cnt };
+			std::vector<cv::Point2d> cnt_undistort(1);
+			cv::undistortPoints(cnt_distort, cnt_undistort, camera_matrix, distortion);
+			// Shift points to center
+			cnt_undistort[0].x -= src->width / 2;
+			cnt_undistort[0].y -= src->height / 2;
+
+			double fx = camera_matrix.at<double>(0, 0);
+			double fy = camera_matrix.at<double>(1, 1);
+			geometry_msgs::Vector3Stamped direction;
+			direction.vector.x = cnt_undistort[0].x;
+			direction.vector.y = cnt_undistort[0].y * fx / fy;
+			direction.vector.z = fx;
+			// Normalize vector
+			direction.vector = normalize(direction.vector);
+			direction.header.stamp = src->header.stamp;
+			direction.header.frame_id = src->header.frame_id;
+			//ROS_INFO_THROTTLE(1, "Publishing vector: (%lf, %lf, %lf)", direction.vector.x, direction.vector.y, direction.vector.z);
+			direction_pub.publish(direction);
+
+			if (debug_center.getNumSubscribers() > 0)
+			{
+				cv_bridge::CvImage debug_msg;
+				debug_msg.header.frame_id = src->header.frame_id;
+				debug_msg.header.stamp = src->header.stamp;
+				debug_msg.encoding = sensor_msgs::image_encodings::BGR8;
+				cv::Mat debug_image = src_image->image;
+				cv::circle(debug_image, cnt, approx_radius, cv::Scalar(0, 255, 0), 3);
+				debug_msg.image = debug_image;
+				debug_center.publish(debug_msg.toImageMsg());
+			}
+		}
 
 		if (debug_threshold.getNumSubscribers() > 0)
 		{
@@ -99,19 +145,6 @@ private:
 			debug_msg.image = img_threshold;
 			debug_threshold.publish(debug_msg.toImageMsg());
 		}
-		if (debug_center.getNumSubscribers() > 0)
-		{
-			cv_bridge::CvImage debug_msg;
-			debug_msg.header.frame_id = src->header.frame_id;
-			debug_msg.header.stamp = src->header.stamp;
-			debug_msg.encoding = sensor_msgs::image_encodings::BGR8;
-			cv::Mat debug_image = src_image->image;
-			cv::circle(debug_image, cv::Point(cnt_x, cnt_y), approx_radius, cv::Scalar(0, 255, 0), 3);
-			debug_msg.image = debug_image;
-			debug_center.publish(debug_msg.toImageMsg());
-		}
-
-
 	}
 };
 
