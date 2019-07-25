@@ -8,6 +8,7 @@
     <node pkg="nodelet" type="nodelet" name="red_dead_detection" args="load red_dead_detection/red_dead_detection_nodelet frontal_manager" output="screen">
         <remap from="image_raw" to="front_camera/image_raw"/>
         <remap from="camera_info" to="front_camera/camera_info"/>
+        <rosparam command="load" file="$(find robocross2019)/params/logitech_sunlight_dilution.yaml"/>
     </node>
 
 </launch>

@@ -1,0 +1,17 @@
+debug:
+  compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+  compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+  theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+h_high: 14
+h_low: 0
+kernel_size_x: 7
+kernel_size_y: 7
+s_high: 221
+s_low: 135
+threshold:
+  compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+  compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+  theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+v_high: 255
+v_low: 138
+vertical_shift: 25
