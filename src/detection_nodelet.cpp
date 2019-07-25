@@ -104,19 +104,23 @@ private:
 
 		const cv::Size KERNEL_SIZE = {detect_cfg.kernel_size_x, detect_cfg.kernel_size_y};
 		auto kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, KERNEL_SIZE);
+
+		cv::Point2d cnt;
+		// m00 is the area of the pixels; radius would then be sqrt(area/pi)
+		float approx_radius;
+		std::vector<cv::Point2d> cnt_distort(1);
+		std::vector<cv::Point2d> cnt_undistort(1);
+
 		cv::erode(img_threshold, img_threshold, kernel);
 		cv::dilate(img_threshold, img_threshold, kernel);
 
 		auto moments = cv::moments(img_threshold, true);
 		if (moments.m00 > 0)
 		{
-			cv::Point2d cnt{moments.m10 / moments.m00, moments.m01 / moments.m00};
-			// m00 is the area of the pixels; radius would then be sqrt(area/pi)
-			int approx_radius = std::sqrt(moments.m00 * M_1_PI);
-
+			cnt = cv::Point2d{moments.m10 / moments.m00, moments.m01 / moments.m00};
+			cnt_distort[0] = cnt;
+			approx_radius = std::sqrt(moments.m00 * M_1_PI);
 			// Calculate direction vector
-			std::vector<cv::Point2d> cnt_distort = { cnt };
-			std::vector<cv::Point2d> cnt_undistort(1);
 			cv::undistortPoints(cnt_distort, cnt_undistort, camera_matrix, distortion, cv::noArray(), camera_matrix);
 			// Shift points to center
 			cnt_undistort[0].x -= src->width / 2;
@@ -148,22 +152,25 @@ private:
 			std_msgs::Float32 blob_size;
 			blob_size.data = approx_radius;
 			blob_size_pub.publish(blob_size);
+		}
 
-			if (debug_center.getNumSubscribers() > 0)
+		if (debug_center.getNumSubscribers() > 0)
+		{
+			cv_bridge::CvImage debug_msg;
+			debug_msg.header.frame_id = src->header.frame_id;
+			debug_msg.header.stamp = src->header.stamp;
+			debug_msg.encoding = sensor_msgs::image_encodings::BGR8;
+			cv::Mat debug_image = src_image->image;
+			if (moments.m00 > 0)
 			{
-				cv_bridge::CvImage debug_msg;
-				debug_msg.header.frame_id = src->header.frame_id;
-				debug_msg.header.stamp = src->header.stamp;
-				debug_msg.encoding = sensor_msgs::image_encodings::BGR8;
-				cv::Mat debug_image = src_image->image;
 				cv::circle(debug_image, cnt, approx_radius, cv::Scalar(0, 255, 0), 3);
 				// Move undistorted point back to its original position
 				cnt_undistort[0].x += src->width / 2;
 				cnt_undistort[0].y += src->height / 2;
 				cv::circle(debug_image, cnt_undistort[0], approx_radius, cv::Scalar(255, 0, 0), 3);
-				debug_msg.image = debug_image;
-				debug_center.publish(debug_msg.toImageMsg());
 			}
+			debug_msg.image = debug_image;
+			debug_center.publish(debug_msg.toImageMsg());
 		}
 
 		if (debug_threshold.getNumSubscribers() > 0)
