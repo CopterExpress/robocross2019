@@ -1,0 +1,6 @@
+<launch>
+    <!-- record video from front camrea -->
+    <node name="video_recorder" pkg="image_view" type="video_recorder" output="screen">
+        <remap from="image" to="front_camera/image_raw"/>
+    </node>
+</launch>
