@@ -102,6 +102,15 @@ private:
 		cv::Scalar upper = cv::Scalar(detect_cfg.h_high, detect_cfg.s_high, detect_cfg.v_high);
 		cv::inRange(src_image_hsv, lower, upper, img_threshold);
 
+		if (detect_cfg.h_low_2 != 0 || detect_cfg.h_high_2 != 0) {
+			cv::Mat img_threshold2;
+			cv::Scalar lower = cv::Scalar(detect_cfg.h_low_2, detect_cfg.s_low, detect_cfg.v_low);
+			cv::Scalar upper = cv::Scalar(detect_cfg.h_high_2, detect_cfg.s_high, detect_cfg.v_high);
+			cv::inRange(src_image_hsv, lower, upper, img_threshold2);
+
+			cv::bitwise_or(img_threshold, img_threshold2, img_threshold);
+		}
+
 		const cv::Size KERNEL_SIZE = {detect_cfg.kernel_size_x, detect_cfg.kernel_size_y};
 		auto kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, KERNEL_SIZE);
 
